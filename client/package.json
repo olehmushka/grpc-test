@@ -1,0 +1,12 @@
+{
+  "name": "client",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "request": "node index.js"
+  },
+  "dependencies": {
+    "grpc": "^1.24.2"
+  }
+}
