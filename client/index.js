@@ -1,57 +1,70 @@
 const grpc = require('grpc');
+const protoLoader = require('@grpc/proto-loader');
+const path = require('path');
 
+const BOOKS_PROTO_PATH = path.join(__dirname, 'books.proto');
 const SERVER_HOST = '0.0.0.0';
 const SERVER_PORT = 50051;
 
-const booksProto = grpc.load('books.proto');
-const client = new booksProto.books
+const options = {
+  keepCase: true,
+  longs: String,
+  enums: String,
+  bytes: String,
+  defaults: true,
+  arrays: true,
+  objects: true,
+  oneofs: true,
+};
+const packageDefinition = protoLoader.loadSync(BOOKS_PROTO_PATH, options);
+const booksProto = grpc.loadPackageDefinition(packageDefinition);
+
+const client = new booksProto
+  .books
   .BookService(`${SERVER_HOST}:${SERVER_PORT}`, grpc.credentials.createInsecure());
 
 const printResponse = (error, response) => {
-    if (error)
-        console.log('Error: ', error);
-    else
-        console.log(response);
+  if (error) {
+    console.log('Error: ', error);
+    return;
+  }
+  console.log(response);
 };
 
 const listBooks = () => {
-    client.list({}, function(error, books) {
-        printResponse(error, books);
-    });
+  client.list({}, (error, books) => {
+    printResponse(error, books);
+  });
 };
 
 const insertBook = (id, title, author) => {
-    var book = {
-        id: parseInt(id),
-        title: title,
-        author: author
-    };
-    client.insert(book, function(error, empty) {
-        printResponse(error, empty);
-    });
+  const book = {
+    author,
+    title,
+    id: parseInt(id, 10),
+  };
+  client.insert(book, (error, empty) => {
+    printResponse(error, empty);
+  });
 };
 
 const getBook = (id) => {
-    client.get({
-        id: parseInt(id)
-    }, function(error, book) {
-        printResponse(error, book);
-    });
+  client.get({ id: parseInt(id, 10) }, (error, book) => {
+    printResponse(error, book);
+  });
 };
 
 const deleteBook = (id) => {
-    client.delete({
-        id: parseInt(id)
-    }, function(error, empty) {
-        printResponse(error, empty);
-    });
+  client.delete({ id: parseInt(id, 10) }, (error, empty) => {
+    printResponse(error, empty);
+  });
 };
 
 const watchBooks = () => {
-    var call = client.watch({});
-    call.on('data', function(book) {
-        console.log(book);
-    });
+  const call = client.watch({});
+  call.on('data', (book) => {
+    console.log(book);
+  });
 };
 
 const processName = process.argv.shift();
